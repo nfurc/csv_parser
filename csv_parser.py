@@ -13,12 +13,12 @@ table 		= "salesjan2009"
 # open database connection
 db = MySQLdb.connect("localhost","nicholas","password", database )
 
-# prepare a cursor object using cursor() method
+# prepare a cursor object 
 c = db.cursor()
 
 # === database set up ===
-c1 		= 'TransactionDate'		# column name
-c1_type = 'DATETIME'				# data/column type
+c1 		= 'TransactionDate'	  # column name
+c1_type = 'DATETIME'		  # data/column type
 c2 		= 'Product'
 c2_type = 'CHAR(8)'
 c3		= 'Price'
@@ -61,13 +61,39 @@ except MySQLdb.Error as err:
     print('Error creating columns: {}'.format(err))
 
 
-# set up empty containers for each row/entry
-entries = []
+# set up empty container for each row/entry
+data = []
 
+# read csv file
+with open(file, 'rU', delimeter='\t') as f:
+    # create file reader
+    reader = csv.reader(f, skipinitialspace=True)
 
-with open(file, 'rU') as f:
-    reader = csv.reader(f)
+    # skip the first line (headers)
+    next(reader)
 
+    # gather data in table format (eg. data[x][y] where x = row - 1, y = col)
+    for row in reader:
+        data.append(row)
+
+# write csv row into database
+rno = 0
+for row in data:
+    if (rno <= len(data)):
+        sql = 'INSERT INTO {0} ( {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10} ) ' \
+                ' VALUES ( {11}, {12}, {13}, {14}, {15}, "{16}", "{17}", "{18}", {19}, {20}) '
+        try:
+            c.execute(sql.format( table, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10,
+                              data[rno][0], data[rno][1], data[rno][2], data[rno][3], data[rno][4], 
+                              data[rno][5], data[rno][6], data[rno][7], data[rno][8], data[rno][9] ) )
+            db.commit()
+            print('Row ' + str(row) + ' copied to database')
+        except MySQLdb.Error as err:
+            db.rollback()
+            print(c._last_executed)
+            #print('Error copying data: {}'.format(err))
+
+    rno += 1
 
 
 
